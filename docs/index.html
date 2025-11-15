@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Repository Recommendations - Interactive Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        
+        .controls {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .control-group label {
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.9em;
+        }
+        
+        input, select {
+            padding: 8px 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .stats {
+            padding: 15px 30px;
+            background: #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .stat {
+            font-size: 0.9em;
+            color: #495057;
+        }
+        
+        .stat strong {
+            color: #667eea;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            padding: 20px 30px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        thead {
+            background: #f8f9fa;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #495057;
+            border-bottom: 2px solid #dee2e6;
+            cursor: pointer;
+            user-select: none;
+            white-space: nowrap;
+        }
+        
+        th:hover {
+            background: #e9ecef;
+        }
+        
+        th.sortable::after {
+            content: ' ↕';
+            opacity: 0.5;
+            font-size: 0.8em;
+        }
+        
+        th.sort-asc::after {
+            content: ' ↑';
+            opacity: 1;
+            color: #667eea;
+        }
+        
+        th.sort-desc::after {
+            content: ' ↓';
+            opacity: 1;
+            color: #667eea;
+        }
+        
+        tbody tr {
+            border-bottom: 1px solid #dee2e6;
+            transition: background 0.2s;
+        }
+        
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+        
+        td {
+            padding: 15px;
+            vertical-align: top;
+        }
+        
+        .repo-name {
+            font-weight: 600;
+            color: #212529;
+            margin-bottom: 5px;
+        }
+        
+        .repo-link {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 0.9em;
+        }
+        
+        .repo-link:hover {
+            text-decoration: underline;
+        }
+        
+        .repo-description {
+            color: #6c757d;
+            font-size: 0.9em;
+            margin-top: 5px;
+            line-height: 1.4;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            font-weight: 600;
+            margin: 2px;
+        }
+        
+        .badge-category {
+            background: #667eea;
+            color: white;
+        }
+        
+        .badge-language {
+            background: #28a745;
+            color: white;
+        }
+        
+        .badge-topic {
+            background: #17a2b8;
+            color: white;
+        }
+        
+        .badge-score {
+            background: #ffc107;
+            color: #212529;
+        }
+        
+        .stars {
+            color: #ffc107;
+            font-weight: 600;
+        }
+        
+        .forks {
+            color: #6c757d;
+        }
+        
+        .score-bar {
+            width: 100px;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: 8px;
+        }
+        
+        .score-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.3s;
+        }
+        
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+        
+        .no-results h3 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .control-group {
+                width: 100%;
+            }
+            
+            .table-container {
+                padding: 10px;
+            }
+            
+            table {
+                font-size: 0.9em;
+            }
+            
+            th, td {
+                padding: 10px 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Repository Recommendations</h1>
+            <p>Interactive, sortable, and filterable interface</p>
+            <p style="font-size: 0.9em; margin-top: 10px;">Generated: 2025-11-14 19:15:37</p>
+        </div>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label>Search</label>
+                <input type="text" id="search" placeholder="Search repos, descriptions, topics...">
+            </div>
+            <div class="control-group">
+                <label>Category</label>
+                <select id="category">
+                    <option value="">All Categories</option>
+                    <option value="educational">Educational</option>
+<option value="hidden_gems">Hidden Gems</option>
+<option value="production_ready">Production Ready</option>
+<option value="recently_updated">Recently Updated</option>
+<option value="rising_stars">Rising Stars</option>
+<option value="top_overall">Top Overall</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>Language</label>
+                <select id="language">
+                    <option value="">All Languages</option>
+                    <option value="C++">C++</option>
+<option value="Go">Go</option>
+<option value="HTML">HTML</option>
+<option value="Java">Java</option>
+<option value="JavaScript">JavaScript</option>
+<option value="Jupyter Notebook">Jupyter Notebook</option>
+<option value="MDX">MDX</option>
+<option value="Python">Python</option>
+<option value="Rust">Rust</option>
+<option value="SCSS">SCSS</option>
+<option value="Swift">Swift</option>
+<option value="TypeScript">TypeScript</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>Min Stars</label>
+                <input type="number" id="minStars" placeholder="0" min="0">
+            </div>
+            <div class="control-group">
+                <label>Min Score</label>
+                <input type="number" id="minScore" placeholder="0" min="0" max="1" step="0.1">
+            </div>
+        </div>
+        
+        <div class="stats">
+            <div class="stat">
+                <strong id="totalCount">109</strong> total repositories
+            </div>
+            <div class="stat">
+                Showing <strong id="showingCount">109</strong> repositories
+            </div>
+        </div>
+        
+        <div class="table-container">
+            <table id="repoTable">
+                <thead>
+                    <tr>
+                        <th class="sortable" data-sort="rank">Rank</th>
+                        <th class="sortable" data-sort="name">Repository</th>
+                        <th class="sortable" data-sort="category">Category</th>
+                        <th class="sortable" data-sort="language">Language</th>
+                        <th class="sortable" data-sort="stars">Stars</th>
+                        <th class="sortable" data-sort="forks">Forks</th>
+                        <th class="sortable" data-sort="score">Score</th>
+                        <th>Topics</th>
+                        <th>Why Recommended</th>
+                    </tr>
+                </thead>
+                <tbody id="repoTableBody">
+                    <!-- Table rows generated by JavaScript -->
+                </tbody>
+            </table>
+            <div id="noResults" class="no-results" style="display: none;">
+                <h3>No repositories found</h3>
+                <p>Try adjusting your filters</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const repos = [{"rank": 1, "category": "top_overall", "name": "EbookFoundation/free-programming-books", "url": "https://github.com/EbookFoundation/free-programming-books", "description": ":books: Freely available programming books", "stars": 376842, "forks": 65385, "language": "Python", "topics": ["books", "education", "hacktoberfest", "list", "resource"], "score": 1.0, "star_velocity": 85.31627801675346, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (376,842 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 2, "category": "top_overall", "name": "donnemartin/system-design-primer", "url": "https://github.com/donnemartin/system-design-primer", "description": "Learn how to design large-scale systems. Prep for the system design interview.  Includes Anki flashcards.", "stars": 326471, "forks": 53163, "language": "Python", "topics": ["design", "design-patterns", "design-system", "development", "interview"], "score": 1.0, "star_velocity": 102.56707508639649, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (326,471 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 3, "category": "top_overall", "name": "vinta/awesome-python", "url": "https://github.com/vinta/awesome-python", "description": "An opinionated list of awesome Python frameworks, libraries, software and resources.", "stars": 269349, "forks": 26695, "language": "Python", "topics": ["awesome", "collections", "python", "python-framework", "python-library"], "score": 1.0, "star_velocity": 64.77849927849928, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (269,349 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 4, "category": "top_overall", "name": "TheAlgorithms/Python", "url": "https://github.com/TheAlgorithms/Python", "description": "All Algorithms implemented in Python", "stars": 213089, "forks": 49252, "language": "Python", "topics": ["algorithm", "algorithm-competitions", "algorithms-implemented", "algos", "community-driven"], "score": 1.0, "star_velocity": 62.526115023474176, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (213,089 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 5, "category": "top_overall", "name": "Significant-Gravitas/AutoGPT", "url": "https://github.com/Significant-Gravitas/AutoGPT", "description": "AutoGPT is the vision of accessible AI for everyone, to use and to build on. Our mission is to provide the tools, so that you can focus on what matters.", "stars": 179693, "forks": 46122, "language": "Python", "topics": ["ai", "artificial-intelligence", "autonomous-agents", "gpt-4", "llama-api"], "score": 1.0, "star_velocity": 184.48973305954826, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (179,693 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 6, "category": "top_overall", "name": "AUTOMATIC1111/stable-diffusion-webui", "url": "https://github.com/AUTOMATIC1111/stable-diffusion-webui", "description": "Stable Diffusion web UI", "stars": 158202, "forks": 29366, "language": "Python", "topics": ["ai", "ai-art", "deep-learning", "diffusion", "gradio"], "score": 1.0, "star_velocity": 134.06949152542373, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (158,202 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 7, "category": "top_overall", "name": "huggingface/transformers", "url": "https://github.com/huggingface/transformers", "description": "\ud83e\udd17 Transformers: the model-definition framework for state-of-the-art machine learning models in text, vision, audio, and multimodal models, for both inference and training. ", "stars": 152518, "forks": 31145, "language": "Python", "topics": ["audio", "deep-learning", "deepseek", "gemma", "glm"], "score": 1.0, "star_velocity": 59.276331130975514, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (152,518 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 8, "category": "top_overall", "name": "langflow-ai/langflow", "url": "https://github.com/langflow-ai/langflow", "description": "Langflow is a powerful tool for building and deploying AI-powered agents and workflows.", "stars": 138226, "forks": 7987, "language": "Python", "topics": ["agents", "chatgpt", "generative-ai", "large-language-models", "multiagent"], "score": 1.0, "star_velocity": 136.85742574257426, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (138,226 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 9, "category": "top_overall", "name": "yt-dlp/yt-dlp", "url": "https://github.com/yt-dlp/yt-dlp", "description": "A feature-rich command-line audio/video downloader", "stars": 135064, "forks": 10849, "language": "Python", "topics": ["cli", "downloader", "python", "sponsorblock", "youtube-dl"], "score": 1.0, "star_velocity": 73.20542005420054, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (135,064 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 10, "category": "top_overall", "name": "comfyanonymous/ComfyUI", "url": "https://github.com/comfyanonymous/ComfyUI", "description": "The most powerful and modular diffusion model GUI, api and backend with a graph/nodes interface.", "stars": 93588, "forks": 10557, "language": "Python", "topics": ["ai", "comfy", "comfyui", "python", "pytorch"], "score": 1.0, "star_velocity": 90.68604651162791, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (93,588 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 11, "category": "top_overall", "name": "microsoft/markitdown", "url": "https://github.com/microsoft/markitdown", "description": "Python tool for converting files and office documents to Markdown.", "stars": 83007, "forks": 4704, "language": "Python", "topics": ["autogen", "autogen-extension", "langchain", "markdown", "microsoft-office"], "score": 1.0, "star_velocity": 226.79508196721312, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (83,007 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 12, "category": "top_overall", "name": "Shubhamsaboo/awesome-llm-apps", "url": "https://github.com/Shubhamsaboo/awesome-llm-apps", "description": "Collection of awesome LLM apps with AI Agents and RAG using OpenAI, Anthropic, Gemini and opensource models.", "stars": 77661, "forks": 10307, "language": "Python", "topics": ["llms", "python", "rag"], "score": 1.0, "star_velocity": 137.6968085106383, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (77,661 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 13, "category": "top_overall", "name": "hacksider/Deep-Live-Cam", "url": "https://github.com/hacksider/Deep-Live-Cam", "description": "real time face swap and one-click video deepfake with only a single image", "stars": 75747, "forks": 11019, "language": "Python", "topics": ["ai", "ai-deep-fake", "ai-face", "ai-webcam", "artificial-intelligence"], "score": 1.0, "star_velocity": 96.86317135549872, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (75,747 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 14, "category": "top_overall", "name": "binary-husky/gpt_academic", "url": "https://github.com/binary-husky/gpt_academic", "description": "\u4e3aGPT/GLM\u7b49LLM\u5927\u8bed\u8a00\u6a21\u578b\u63d0\u4f9b\u5b9e\u7528\u5316\u4ea4\u4e92\u63a5\u53e3\uff0c\u7279\u522b\u4f18\u5316\u8bba\u6587\u9605\u8bfb/\u6da6\u8272/\u5199\u4f5c\u4f53\u9a8c\uff0c\u6a21\u5757\u5316\u8bbe\u8ba1\uff0c\u652f\u6301\u81ea\u5b9a\u4e49\u5feb\u6377\u6309\u94ae&\u51fd\u6570\u63d2\u4ef6\uff0c\u652f\u6301Python\u548cC++\u7b49\u9879\u76ee\u5256\u6790&\u81ea\u8bd1\u89e3\u529f\u80fd\uff0cPDF/LaTex\u8bba\u6587\u7ffb\u8bd1&\u603b\u7ed3\u529f\u80fd\uff0c\u652f\u6301\u5e76\u884c\u95ee\u8be2\u591a\u79cdLLM\u6a21\u578b\uff0c\u652f\u6301chatglm3\u7b49\u672c\u5730\u6a21\u578b\u3002\u63a5\u5165\u901a\u4e49\u5343\u95ee, deepseekcoder, \u8baf\u98de\u661f\u706b, \u6587\u5fc3\u4e00\u8a00, llama2, rwkv, claude2, moss\u7b49\u3002", "stars": 69659, "forks": 8396, "language": "Python", "topics": ["academic", "chatglm-6b", "chatgpt", "gpt-4", "large-language-models"], "score": 1.0, "star_velocity": 71.81340206185567, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (69,659 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 15, "category": "top_overall", "name": "xtekky/gpt4free", "url": "https://github.com/xtekky/gpt4free", "description": "The official gpt4free repository | various collection of powerful language models | o4, o3 and deepseek r1, gpt-4.1, gemini 2.5", "stars": 65539, "forks": 13709, "language": "Python", "topics": ["chatbot", "chatbots", "chatgpt", "chatgpt-4", "chatgpt-api"], "score": 1.0, "star_velocity": 68.1987513007284, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (65,539 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 16, "category": "top_overall", "name": "OpenHands/OpenHands", "url": "https://github.com/OpenHands/OpenHands", "description": "\ud83d\ude4c OpenHands: Code Less, Make More", "stars": 64983, "forks": 7907, "language": "Python", "topics": ["agent", "artificial-intelligence", "chatgpt", "claude-ai", "cli"], "score": 1.0, "star_velocity": 106.35515548281506, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (64,983 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 17, "category": "top_overall", "name": "hiyouga/LLaMA-Factory", "url": "https://github.com/hiyouga/LLaMA-Factory", "description": "Unified Efficient Fine-Tuning of 100+ LLMs & VLMs (ACL 2024)", "stars": 62501, "forks": 7564, "language": "Python", "topics": ["agent", "ai", "deepseek", "fine-tuning", "gemma"], "score": 1.0, "star_velocity": 69.3684794672586, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (62,501 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 18, "category": "top_overall", "name": "FoundationAgents/MetaGPT", "url": "https://github.com/FoundationAgents/MetaGPT", "description": "\ud83c\udf1f The Multi-Agent Framework: First AI Software Company, Towards Natural Language Programming", "stars": 59470, "forks": 7254, "language": "Python", "topics": ["agent", "gpt", "llm", "metagpt", "multi-agent"], "score": 1.0, "star_velocity": 68.51382488479263, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (59,470 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 19, "category": "top_overall", "name": "RVC-Boss/GPT-SoVITS", "url": "https://github.com/RVC-Boss/GPT-SoVITS", "description": "1 min voice data can also be used to train a good TTS model! (few shot voice cloning)", "stars": 52263, "forks": 5716, "language": "Python", "topics": ["text-to-speech", "tts", "vits", "voice-clone", "voice-cloneai"], "score": 1.0, "star_velocity": 78.0044776119403, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (52,263 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 20, "category": "top_overall", "name": "microsoft/autogen", "url": "https://github.com/microsoft/autogen", "description": "A programming framework for agentic AI", "stars": 51681, "forks": 7853, "language": "Python", "topics": ["agentic", "agentic-agi", "agents", "ai", "autogen"], "score": 1.0, "star_velocity": 63.1025641025641, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (51,681 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 1, "category": "rising_stars", "name": "github/spec-kit", "url": "https://github.com/github/spec-kit", "description": "\ud83d\udcab Toolkit to help you get started with Spec-Driven Development", "stars": 48392, "forks": 4130, "language": "Python", "topics": ["ai", "copilot", "development", "engineering", "prd"], "score": 1.0, "star_velocity": 569.3176470588236, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (48,392 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 2, "category": "rising_stars", "name": "google-gemini/gemini-cli", "url": "https://github.com/google-gemini/gemini-cli", "description": "An open-source AI agent that brings the power of Gemini directly into your terminal.", "stars": 82515, "forks": 9259, "language": "TypeScript", "topics": ["gemini", "gemini-api"], "score": 1.0, "star_velocity": 391.06635071090045, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (82,515 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 3, "category": "rising_stars", "name": "deepseek-ai/DeepSeek-V3", "url": "https://github.com/deepseek-ai/DeepSeek-V3", "description": null, "stars": 100276, "forks": 16344, "language": "Python", "topics": [], "score": 0.8800000000000001, "star_velocity": 310.4520123839009, "quality_score": 0.4, "activity_score": 1.0, "why_recommended": "Highly popular (100,276 stars); Rising star; Recently updated; Has license"}, {"rank": 4, "category": "rising_stars", "name": "OpenCut-app/OpenCut", "url": "https://github.com/OpenCut-app/OpenCut", "description": "The open-source CapCut alternative", "stars": 43598, "forks": 4175, "language": "TypeScript", "topics": ["editor", "oss", "videoeditor"], "score": 1.0, "star_velocity": 300.6758620689655, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (43,598 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 5, "category": "rising_stars", "name": "openai/codex", "url": "https://github.com/openai/codex", "description": "Lightweight coding agent that runs in your terminal", "stars": 50519, "forks": 6295, "language": "Rust", "topics": [], "score": 0.92, "star_velocity": 234.9720930232558, "quality_score": 0.6000000000000001, "activity_score": 1.0, "why_recommended": "Highly popular (50,519 stars); Rising star; Recently updated; Has license"}, {"rank": 6, "category": "rising_stars", "name": "microsoft/markitdown", "url": "https://github.com/microsoft/markitdown", "description": "Python tool for converting files and office documents to Markdown.", "stars": 83007, "forks": 4704, "language": "Python", "topics": ["autogen", "autogen-extension", "langchain", "markdown", "microsoft-office"], "score": 1.0, "star_velocity": 226.79508196721312, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (83,007 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 7, "category": "rising_stars", "name": "modelcontextprotocol/servers", "url": "https://github.com/modelcontextprotocol/servers", "description": "Model Context Protocol Servers", "stars": 72654, "forks": 8762, "language": "TypeScript", "topics": [], "score": 0.92, "star_velocity": 201.81666666666666, "quality_score": 0.6000000000000001, "activity_score": 1.0, "why_recommended": "Highly popular (72,654 stars); Rising star; Recently updated; Has license"}, {"rank": 8, "category": "rising_stars", "name": "FoundationAgents/OpenManus", "url": "https://github.com/FoundationAgents/OpenManus", "description": "No fortress, purely open ground.  OpenManus is Coming.", "stars": 50833, "forks": 8867, "language": "Python", "topics": [], "score": 0.9600000000000001, "star_velocity": 200.92094861660078, "quality_score": 0.8, "activity_score": 1.0, "why_recommended": "Highly popular (50,833 stars); Rising star; Recently updated; Has license"}, {"rank": 9, "category": "rising_stars", "name": "browser-use/browser-use", "url": "https://github.com/browser-use/browser-use", "description": "\ud83c\udf10 Make websites accessible for AI agents. Automate tasks online with ease.", "stars": 72544, "forks": 8632, "language": "Python", "topics": ["ai-agents", "ai-tools", "browser-automation", "browser-use", "llm"], "score": 0.9600000000000001, "star_velocity": 191.4089709762533, "quality_score": 0.8, "activity_score": 1.0, "why_recommended": "Highly popular (72,544 stars); Rising star; Recently updated; Has license"}, {"rank": 10, "category": "rising_stars", "name": "Significant-Gravitas/AutoGPT", "url": "https://github.com/Significant-Gravitas/AutoGPT", "description": "AutoGPT is the vision of accessible AI for everyone, to use and to build on. Our mission is to provide the tools, so that you can focus on what matters.", "stars": 179693, "forks": 46122, "language": "Python", "topics": ["ai", "artificial-intelligence", "autonomous-agents", "gpt-4", "llama-api"], "score": 1.0, "star_velocity": 184.48973305954826, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (179,693 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 11, "category": "rising_stars", "name": "ollama/ollama", "url": "https://github.com/ollama/ollama", "description": "Get up and running with OpenAI gpt-oss, DeepSeek-R1, Gemma 3 and other models.", "stars": 155966, "forks": 13637, "language": "Go", "topics": ["deepseek", "gemma", "gemma3", "gemma3n", "go"], "score": 0.9600000000000001, "star_velocity": 178.86009174311926, "quality_score": 0.8, "activity_score": 1.0, "why_recommended": "Highly popular (155,966 stars); Rising star; Recently updated; Has license"}, {"rank": 12, "category": "rising_stars", "name": "permissionlesstech/bitchat", "url": "https://github.com/permissionlesstech/bitchat", "description": "bluetooth mesh chat, IRC vibes", "stars": 23297, "forks": 2166, "language": "Swift", "topics": [], "score": 0.9600000000000001, "star_velocity": 175.1654135338346, "quality_score": 0.8, "activity_score": 1.0, "why_recommended": "Highly popular (23,297 stars); Rising star; Recently updated; Has license"}, {"rank": 13, "category": "rising_stars", "name": "anthropics/claude-code", "url": "https://github.com/anthropics/claude-code", "description": "Claude Code is an agentic coding tool that lives in your terminal, understands your codebase, and helps you code faster by executing routine tasks, explaining complex code, and handling git workflows - all through natural language commands.", "stars": 42397, "forks": 2821, "language": "TypeScript", "topics": [], "score": 0.8800000000000001, "star_velocity": 159.988679245283, "quality_score": 0.4, "activity_score": 1.0, "why_recommended": "Highly popular (42,397 stars); Rising star; Recently updated"}, {"rank": 14, "category": "rising_stars", "name": "upstash/context7", "url": "https://github.com/upstash/context7", "description": "Context7 MCP Server -- Up-to-date code documentation for LLMs and AI code editors", "stars": 37119, "forks": 1837, "language": "JavaScript", "topics": ["llm", "mcp", "mcp-server", "vibe-coding"], "score": 0.9600000000000001, "star_velocity": 159.30901287553647, "quality_score": 0.8, "activity_score": 1.0, "why_recommended": "Highly popular (37,119 stars); Rising star; Recently updated; Has license"}, {"rank": 15, "category": "rising_stars", "name": "open-webui/open-webui", "url": "https://github.com/open-webui/open-webui", "description": "User-friendly AI Interface (Supports Ollama, OpenAI API, ...)", "stars": 115243, "forks": 16116, "language": "JavaScript", "topics": ["ai", "llm", "llm-ui", "llm-webui", "llms"], "score": 1.0, "star_velocity": 149.66623376623377, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (115,243 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 16, "category": "rising_stars", "name": "Shubhamsaboo/awesome-llm-apps", "url": "https://github.com/Shubhamsaboo/awesome-llm-apps", "description": "Collection of awesome LLM apps with AI Agents and RAG using OpenAI, Anthropic, Gemini and opensource models.", "stars": 77661, "forks": 10307, "language": "Python", "topics": ["llms", "python", "rag"], "score": 1.0, "star_velocity": 137.6968085106383, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (77,661 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 17, "category": "rising_stars", "name": "langflow-ai/langflow", "url": "https://github.com/langflow-ai/langflow", "description": "Langflow is a powerful tool for building and deploying AI-powered agents and workflows.", "stars": 138226, "forks": 7987, "language": "Python", "topics": ["agents", "chatgpt", "generative-ai", "large-language-models", "multiagent"], "score": 1.0, "star_velocity": 136.85742574257426, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (138,226 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 18, "category": "rising_stars", "name": "yeongpin/cursor-free-vip", "url": "https://github.com/yeongpin/cursor-free-vip", "description": "[Support 0.49.x]\uff08Reset Cursor AI MachineID & Bypass Higher Token Limit\uff09 Cursor Ai \uff0c\u81ea\u52a8\u91cd\u7f6e\u673a\u5668ID \uff0c \u514d\u8d39\u5347\u7ea7\u4f7f\u7528Pro\u529f\u80fd: You've reached your trial request limit. / Too many free trial accounts used on this machine. Please upgrade to pro. We have this limit in place to prevent abuse. Please let us know if you believe this is a mistake.", "stars": 41743, "forks": 5036, "language": "Python", "topics": ["automation", "cursor", "cursor-ai", "cursor-ide", "cursorai"], "score": 0.9600000000000001, "star_velocity": 135.97068403908796, "quality_score": 0.8, "activity_score": 1.0, "why_recommended": "Highly popular (41,743 stars); Rising star; Recently updated; Has license"}, {"rank": 19, "category": "rising_stars", "name": "AUTOMATIC1111/stable-diffusion-webui", "url": "https://github.com/AUTOMATIC1111/stable-diffusion-webui", "description": "Stable Diffusion web UI", "stars": 158202, "forks": 29366, "language": "Python", "topics": ["ai", "ai-art", "deep-learning", "diffusion", "gradio"], "score": 1.0, "star_velocity": 134.06949152542373, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (158,202 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 20, "category": "rising_stars", "name": "apple/container", "url": "https://github.com/apple/container", "description": "A tool for creating and running Linux containers using lightweight virtual machines on a Mac. It is written in Swift, and optimized for Apple silicon. ", "stars": 22171, "forks": 522, "language": "Swift", "topics": [], "score": 0.9600000000000001, "star_velocity": 131.9702380952381, "quality_score": 0.8, "activity_score": 1.0, "why_recommended": "Highly popular (22,171 stars); Rising star; Recently updated; Has license"}, {"rank": 1, "category": "hidden_gems", "name": "cloudinary/cloudinary-react", "url": "https://github.com/cloudinary/cloudinary-react", "description": "React components that utilize Cloudinary functionality", "stars": 500, "forks": 215, "language": "JavaScript", "topics": ["cloudinary", "cloudinary-sdk", "cloudinary-sdks", "image-manipulation", "javascript"], "score": 0.43971598662316347, "star_velocity": 0.14867677668748142, "quality_score": 1.0, "activity_score": 0.8958904109589041, "why_recommended": "High quality; Has license"}, {"rank": 2, "category": "hidden_gems", "name": "Laboratoria/curriculum", "url": "https://github.com/Laboratoria/curriculum", "description": "El bootcamp de @Laboratoria es un programa de aprendizaje inmersivo de 6 meses enfocado en los perfiles de Web Developer y UX Designer.", "stars": 489, "forks": 460, "language": "JavaScript", "topics": ["bootcamp", "front-end-web-development", "javascript", "laboratoria", "ux"], "score": 0.44011244596407134, "star_velocity": 0.15698234349919743, "quality_score": 1.0, "activity_score": 0.8986301369863013, "why_recommended": "High quality; Has license"}, {"rank": 3, "category": "hidden_gems", "name": "shainakrumme/open-source-handbook", "url": "https://github.com/shainakrumme/open-source-handbook", "description": "\u2b50\ufe0f Open source projects for all skill levels", "stars": 460, "forks": 66, "language": null, "topics": ["advanced-project", "android", "awesome-list", "awesome-lists", "beginner-project"], "score": 0.4611657204726263, "star_velocity": 0.15807560137457044, "quality_score": 1.0, "activity_score": 0.9863013698630136, "why_recommended": "Recently updated; High quality; Has license"}, {"rank": 4, "category": "hidden_gems", "name": "guilhermeborgesbastos/live-resume", "url": "https://github.com/guilhermeborgesbastos/live-resume", "description": "\u7b80\u5386\u6a21\u7248 Create a professional website & resume that helps you stand out from the crowd using our fast and easy personal web application, designed to highlight your skills and experience.", "stars": 450, "forks": 268, "language": "SCSS", "topics": ["angular", "cross-platform-compatibility", "css3", "curriculum", "html5"], "score": 0.4645943579766537, "star_velocity": 0.2188715953307393, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Recently updated; High quality; Has license"}, {"rank": 5, "category": "hidden_gems", "name": "OSPanel/OpenServerPanel", "url": "https://github.com/OSPanel/OpenServerPanel", "description": "Software environment for web development", "stars": 450, "forks": 50, "language": "HTML", "topics": ["control-panel", "dev", "developer-tools", "development", "local"], "score": 0.46536567164179105, "star_velocity": 0.373134328358209, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Recently updated; High quality; Has license"}, {"rank": 6, "category": "hidden_gems", "name": "jobream/List-of-Learning-Resources", "url": "https://github.com/jobream/List-of-Learning-Resources", "description": "This collection provides a list of educational resources for Software Engineers. Feel free to add your favorite resources as well and help others in their journey of learning.", "stars": 445, "forks": 107, "language": null, "topics": ["competitive-programming", "computer-science", "data-science", "resources", "software-engineering"], "score": 0.4548990663209894, "star_velocity": 0.22762148337595908, "quality_score": 1.0, "activity_score": 0.9616438356164384, "why_recommended": "Recently updated; High quality; Has license"}, {"rank": 7, "category": "hidden_gems", "name": "r3-team/r3", "url": "https://github.com/r3-team/r3", "description": "REI3 - Free and open low code", "stars": 499, "forks": 69, "language": "JavaScript", "topics": ["application-builder", "business-managment", "business-software", "business-solutions", "free-software"], "score": 0.4259308468572668, "star_velocity": 0.329155672823219, "quality_score": 0.8, "activity_score": 0.9972602739726028, "why_recommended": "Recently updated; Has license"}, {"rank": 8, "category": "hidden_gems", "name": "mapache-salvaje/contract-killer", "url": "https://github.com/mapache-salvaje/contract-killer", "description": "This is my US English rewrite of the Stuff & Nonsense killer contract for freelancers.", "stars": 459, "forks": 144, "language": null, "topics": ["freelancing", "web-development"], "score": 0.4195726708502334, "star_velocity": 0.25642458100558657, "quality_score": 0.8, "activity_score": 0.9780821917808219, "why_recommended": "Recently updated"}, {"rank": 9, "category": "hidden_gems", "name": "virajkulkarni14/WebDeveloperSecurityChecklist", "url": "https://github.com/virajkulkarni14/WebDeveloperSecurityChecklist", "description": "A checklist of important security issues you should consider when creating a web application.", "stars": 423, "forks": 58, "language": null, "topics": ["checklist", "information-security", "web-development"], "score": 0.3500837076331027, "star_velocity": 0.13627577319587628, "quality_score": 0.8, "activity_score": 0.7068493150684931, "why_recommended": "Quality repository"}, {"rank": 1, "category": "recently_updated", "name": "EbookFoundation/free-programming-books", "url": "https://github.com/EbookFoundation/free-programming-books", "description": ":books: Freely available programming books", "stars": 376842, "forks": 65385, "language": "Python", "topics": ["books", "education", "hacktoberfest", "list", "resource"], "score": 1.0, "star_velocity": 85.31627801675346, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (376,842 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 2, "category": "recently_updated", "name": "donnemartin/system-design-primer", "url": "https://github.com/donnemartin/system-design-primer", "description": "Learn how to design large-scale systems. Prep for the system design interview.  Includes Anki flashcards.", "stars": 326471, "forks": 53163, "language": "Python", "topics": ["design", "design-patterns", "design-system", "development", "interview"], "score": 1.0, "star_velocity": 102.56707508639649, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (326,471 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 3, "category": "recently_updated", "name": "vinta/awesome-python", "url": "https://github.com/vinta/awesome-python", "description": "An opinionated list of awesome Python frameworks, libraries, software and resources.", "stars": 269349, "forks": 26695, "language": "Python", "topics": ["awesome", "collections", "python", "python-framework", "python-library"], "score": 1.0, "star_velocity": 64.77849927849928, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (269,349 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 4, "category": "recently_updated", "name": "TheAlgorithms/Python", "url": "https://github.com/TheAlgorithms/Python", "description": "All Algorithms implemented in Python", "stars": 213089, "forks": 49252, "language": "Python", "topics": ["algorithm", "algorithm-competitions", "algorithms-implemented", "algos", "community-driven"], "score": 1.0, "star_velocity": 62.526115023474176, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (213,089 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 5, "category": "recently_updated", "name": "Significant-Gravitas/AutoGPT", "url": "https://github.com/Significant-Gravitas/AutoGPT", "description": "AutoGPT is the vision of accessible AI for everyone, to use and to build on. Our mission is to provide the tools, so that you can focus on what matters.", "stars": 179693, "forks": 46122, "language": "Python", "topics": ["ai", "artificial-intelligence", "autonomous-agents", "gpt-4", "llama-api"], "score": 1.0, "star_velocity": 184.48973305954826, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (179,693 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 6, "category": "recently_updated", "name": "AUTOMATIC1111/stable-diffusion-webui", "url": "https://github.com/AUTOMATIC1111/stable-diffusion-webui", "description": "Stable Diffusion web UI", "stars": 158202, "forks": 29366, "language": "Python", "topics": ["ai", "ai-art", "deep-learning", "diffusion", "gradio"], "score": 1.0, "star_velocity": 134.06949152542373, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (158,202 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 7, "category": "recently_updated", "name": "huggingface/transformers", "url": "https://github.com/huggingface/transformers", "description": "\ud83e\udd17 Transformers: the model-definition framework for state-of-the-art machine learning models in text, vision, audio, and multimodal models, for both inference and training. ", "stars": 152518, "forks": 31145, "language": "Python", "topics": ["audio", "deep-learning", "deepseek", "gemma", "glm"], "score": 1.0, "star_velocity": 59.276331130975514, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (152,518 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 8, "category": "recently_updated", "name": "langflow-ai/langflow", "url": "https://github.com/langflow-ai/langflow", "description": "Langflow is a powerful tool for building and deploying AI-powered agents and workflows.", "stars": 138226, "forks": 7987, "language": "Python", "topics": ["agents", "chatgpt", "generative-ai", "large-language-models", "multiagent"], "score": 1.0, "star_velocity": 136.85742574257426, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (138,226 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 9, "category": "recently_updated", "name": "yt-dlp/yt-dlp", "url": "https://github.com/yt-dlp/yt-dlp", "description": "A feature-rich command-line audio/video downloader", "stars": 135064, "forks": 10849, "language": "Python", "topics": ["cli", "downloader", "python", "sponsorblock", "youtube-dl"], "score": 1.0, "star_velocity": 73.20542005420054, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (135,064 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 10, "category": "recently_updated", "name": "comfyanonymous/ComfyUI", "url": "https://github.com/comfyanonymous/ComfyUI", "description": "The most powerful and modular diffusion model GUI, api and backend with a graph/nodes interface.", "stars": 93588, "forks": 10557, "language": "Python", "topics": ["ai", "comfy", "comfyui", "python", "pytorch"], "score": 1.0, "star_velocity": 90.68604651162791, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (93,588 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 11, "category": "recently_updated", "name": "microsoft/markitdown", "url": "https://github.com/microsoft/markitdown", "description": "Python tool for converting files and office documents to Markdown.", "stars": 83007, "forks": 4704, "language": "Python", "topics": ["autogen", "autogen-extension", "langchain", "markdown", "microsoft-office"], "score": 1.0, "star_velocity": 226.79508196721312, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (83,007 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 12, "category": "recently_updated", "name": "Shubhamsaboo/awesome-llm-apps", "url": "https://github.com/Shubhamsaboo/awesome-llm-apps", "description": "Collection of awesome LLM apps with AI Agents and RAG using OpenAI, Anthropic, Gemini and opensource models.", "stars": 77661, "forks": 10307, "language": "Python", "topics": ["llms", "python", "rag"], "score": 1.0, "star_velocity": 137.6968085106383, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (77,661 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 13, "category": "recently_updated", "name": "hacksider/Deep-Live-Cam", "url": "https://github.com/hacksider/Deep-Live-Cam", "description": "real time face swap and one-click video deepfake with only a single image", "stars": 75747, "forks": 11019, "language": "Python", "topics": ["ai", "ai-deep-fake", "ai-face", "ai-webcam", "artificial-intelligence"], "score": 1.0, "star_velocity": 96.86317135549872, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (75,747 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 14, "category": "recently_updated", "name": "binary-husky/gpt_academic", "url": "https://github.com/binary-husky/gpt_academic", "description": "\u4e3aGPT/GLM\u7b49LLM\u5927\u8bed\u8a00\u6a21\u578b\u63d0\u4f9b\u5b9e\u7528\u5316\u4ea4\u4e92\u63a5\u53e3\uff0c\u7279\u522b\u4f18\u5316\u8bba\u6587\u9605\u8bfb/\u6da6\u8272/\u5199\u4f5c\u4f53\u9a8c\uff0c\u6a21\u5757\u5316\u8bbe\u8ba1\uff0c\u652f\u6301\u81ea\u5b9a\u4e49\u5feb\u6377\u6309\u94ae&\u51fd\u6570\u63d2\u4ef6\uff0c\u652f\u6301Python\u548cC++\u7b49\u9879\u76ee\u5256\u6790&\u81ea\u8bd1\u89e3\u529f\u80fd\uff0cPDF/LaTex\u8bba\u6587\u7ffb\u8bd1&\u603b\u7ed3\u529f\u80fd\uff0c\u652f\u6301\u5e76\u884c\u95ee\u8be2\u591a\u79cdLLM\u6a21\u578b\uff0c\u652f\u6301chatglm3\u7b49\u672c\u5730\u6a21\u578b\u3002\u63a5\u5165\u901a\u4e49\u5343\u95ee, deepseekcoder, \u8baf\u98de\u661f\u706b, \u6587\u5fc3\u4e00\u8a00, llama2, rwkv, claude2, moss\u7b49\u3002", "stars": 69659, "forks": 8396, "language": "Python", "topics": ["academic", "chatglm-6b", "chatgpt", "gpt-4", "large-language-models"], "score": 1.0, "star_velocity": 71.81340206185567, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (69,659 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 15, "category": "recently_updated", "name": "xtekky/gpt4free", "url": "https://github.com/xtekky/gpt4free", "description": "The official gpt4free repository | various collection of powerful language models | o4, o3 and deepseek r1, gpt-4.1, gemini 2.5", "stars": 65539, "forks": 13709, "language": "Python", "topics": ["chatbot", "chatbots", "chatgpt", "chatgpt-4", "chatgpt-api"], "score": 1.0, "star_velocity": 68.1987513007284, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (65,539 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 16, "category": "recently_updated", "name": "OpenHands/OpenHands", "url": "https://github.com/OpenHands/OpenHands", "description": "\ud83d\ude4c OpenHands: Code Less, Make More", "stars": 64983, "forks": 7907, "language": "Python", "topics": ["agent", "artificial-intelligence", "chatgpt", "claude-ai", "cli"], "score": 1.0, "star_velocity": 106.35515548281506, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (64,983 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 17, "category": "recently_updated", "name": "hiyouga/LLaMA-Factory", "url": "https://github.com/hiyouga/LLaMA-Factory", "description": "Unified Efficient Fine-Tuning of 100+ LLMs & VLMs (ACL 2024)", "stars": 62501, "forks": 7564, "language": "Python", "topics": ["agent", "ai", "deepseek", "fine-tuning", "gemma"], "score": 1.0, "star_velocity": 69.3684794672586, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (62,501 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 18, "category": "recently_updated", "name": "FoundationAgents/MetaGPT", "url": "https://github.com/FoundationAgents/MetaGPT", "description": "\ud83c\udf1f The Multi-Agent Framework: First AI Software Company, Towards Natural Language Programming", "stars": 59470, "forks": 7254, "language": "Python", "topics": ["agent", "gpt", "llm", "metagpt", "multi-agent"], "score": 1.0, "star_velocity": 68.51382488479263, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (59,470 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 19, "category": "recently_updated", "name": "RVC-Boss/GPT-SoVITS", "url": "https://github.com/RVC-Boss/GPT-SoVITS", "description": "1 min voice data can also be used to train a good TTS model! (few shot voice cloning)", "stars": 52263, "forks": 5716, "language": "Python", "topics": ["text-to-speech", "tts", "vits", "voice-clone", "voice-cloneai"], "score": 1.0, "star_velocity": 78.0044776119403, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (52,263 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 20, "category": "recently_updated", "name": "microsoft/autogen", "url": "https://github.com/microsoft/autogen", "description": "A programming framework for agentic AI", "stars": 51681, "forks": 7853, "language": "Python", "topics": ["agentic", "agentic-agi", "agents", "ai", "autogen"], "score": 1.0, "star_velocity": 63.1025641025641, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (51,681 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 1, "category": "educational", "name": "EbookFoundation/free-programming-books", "url": "https://github.com/EbookFoundation/free-programming-books", "description": ":books: Freely available programming books", "stars": 376842, "forks": 65385, "language": "Python", "topics": ["books", "education", "hacktoberfest", "list", "resource"], "score": 1.0, "star_velocity": 85.31627801675346, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (376,842 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 2, "category": "educational", "name": "donnemartin/system-design-primer", "url": "https://github.com/donnemartin/system-design-primer", "description": "Learn how to design large-scale systems. Prep for the system design interview.  Includes Anki flashcards.", "stars": 326471, "forks": 53163, "language": "Python", "topics": ["design", "design-patterns", "design-system", "development", "interview"], "score": 1.0, "star_velocity": 102.56707508639649, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (326,471 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 3, "category": "educational", "name": "vinta/awesome-python", "url": "https://github.com/vinta/awesome-python", "description": "An opinionated list of awesome Python frameworks, libraries, software and resources.", "stars": 269349, "forks": 26695, "language": "Python", "topics": ["awesome", "collections", "python", "python-framework", "python-library"], "score": 1.0, "star_velocity": 64.77849927849928, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (269,349 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 4, "category": "educational", "name": "TheAlgorithms/Python", "url": "https://github.com/TheAlgorithms/Python", "description": "All Algorithms implemented in Python", "stars": 213089, "forks": 49252, "language": "Python", "topics": ["algorithm", "algorithm-competitions", "algorithms-implemented", "algos", "community-driven"], "score": 1.0, "star_velocity": 62.526115023474176, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (213,089 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 5, "category": "educational", "name": "AUTOMATIC1111/stable-diffusion-webui", "url": "https://github.com/AUTOMATIC1111/stable-diffusion-webui", "description": "Stable Diffusion web UI", "stars": 158202, "forks": 29366, "language": "Python", "topics": ["ai", "ai-art", "deep-learning", "diffusion", "gradio"], "score": 1.0, "star_velocity": 134.06949152542373, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (158,202 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 6, "category": "educational", "name": "huggingface/transformers", "url": "https://github.com/huggingface/transformers", "description": "\ud83e\udd17 Transformers: the model-definition framework for state-of-the-art machine learning models in text, vision, audio, and multimodal models, for both inference and training. ", "stars": 152518, "forks": 31145, "language": "Python", "topics": ["audio", "deep-learning", "deepseek", "gemma", "glm"], "score": 1.0, "star_velocity": 59.276331130975514, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (152,518 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 7, "category": "educational", "name": "Shubhamsaboo/awesome-llm-apps", "url": "https://github.com/Shubhamsaboo/awesome-llm-apps", "description": "Collection of awesome LLM apps with AI Agents and RAG using OpenAI, Anthropic, Gemini and opensource models.", "stars": 77661, "forks": 10307, "language": "Python", "topics": ["llms", "python", "rag"], "score": 1.0, "star_velocity": 137.6968085106383, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (77,661 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 8, "category": "educational", "name": "unslothai/unsloth", "url": "https://github.com/unslothai/unsloth", "description": "Fine-tuning & Reinforcement Learning for LLMs. \ud83e\udda5 Train OpenAI gpt-oss, DeepSeek-R1, Qwen3, Gemma 3, TTS 2x faster with 70% less VRAM.", "stars": 48284, "forks": 3965, "language": "Python", "topics": ["agent", "deepseek", "deepseek-r1", "fine-tuning", "gemma"], "score": 1.0, "star_velocity": 67.43575418994413, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (48,284 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 9, "category": "educational", "name": "f/awesome-chatgpt-prompts", "url": "https://github.com/f/awesome-chatgpt-prompts", "description": "This repo includes ChatGPT prompt curation to use ChatGPT and other LLM tools better.", "stars": 136510, "forks": 18157, "language": "JavaScript", "topics": ["bots", "chatbot", "chatgpt", "chatgpt-api", "language"], "score": 1.0, "star_velocity": 126.9860465116279, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (136,510 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 10, "category": "educational", "name": "microsoft/Web-Dev-For-Beginners", "url": "https://github.com/microsoft/Web-Dev-For-Beginners", "description": "24 Lessons, 12 Weeks, Get Started as a Web Developer", "stars": 94213, "forks": 14682, "language": "JavaScript", "topics": ["css", "curriculum", "education", "html", "javascript"], "score": 1.0, "star_velocity": 51.482513661202184, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (94,213 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 11, "category": "educational", "name": "kamranahmedse/developer-roadmap", "url": "https://github.com/kamranahmedse/developer-roadmap", "description": "Interactive roadmaps, guides and other educational content to help developers grow in their careers.", "stars": 343585, "forks": 43369, "language": "TypeScript", "topics": ["angular-roadmap", "backend-roadmap", "blockchain-roadmap", "computer-science", "dba-roadmap"], "score": 1.0, "star_velocity": 108.52337334175616, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (343,585 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 12, "category": "educational", "name": "Snailclimb/JavaGuide", "url": "https://github.com/Snailclimb/JavaGuide", "description": "\u300cJava\u5b66\u4e60+\u9762\u8bd5\u6307\u5357\u300d\u4e00\u4efd\u6db5\u76d6\u5927\u90e8\u5206 Java \u7a0b\u5e8f\u5458\u6240\u9700\u8981\u638c\u63e1\u7684\u6838\u5fc3\u77e5\u8bc6\u3002\u51c6\u5907 Java \u9762\u8bd5\uff0c\u9996\u9009 JavaGuide\uff01", "stars": 152546, "forks": 46039, "language": "Java", "topics": ["algorithms", "interview", "java", "jvm", "mysql"], "score": 1.0, "star_velocity": 55.51164483260553, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (152,546 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 13, "category": "educational", "name": "krahets/hello-algo", "url": "https://github.com/krahets/hello-algo", "description": "\u300aHello \u7b97\u6cd5\u300b\uff1a\u52a8\u753b\u56fe\u89e3\u3001\u4e00\u952e\u8fd0\u884c\u7684\u6570\u636e\u7ed3\u6784\u4e0e\u7b97\u6cd5\u6559\u7a0b\u3002\u652f\u6301 Python, Java, C++, C, C#, JS, Go, Swift, Rust, Ruby, Kotlin, TS, Dart \u4ee3\u7801\u3002\u7b80\u4f53\u7248\u548c\u7e41\u4f53\u7248\u540c\u6b65\u66f4\u65b0\uff0cEnglish version in translation", "stars": 118476, "forks": 14540, "language": "Java", "topics": ["algo", "algorithm", "algorithms", "book", "data-structure"], "score": 1.0, "star_velocity": 107.12115732368898, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (118,476 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 14, "category": "educational", "name": "mlabonne/llm-course", "url": "https://github.com/mlabonne/llm-course", "description": "Course to get into Large Language Models (LLMs) with roadmaps and Colab notebooks.", "stars": 67408, "forks": 7630, "language": null, "topics": ["course", "large-language-models", "llm", "machine-learning", "roadmap"], "score": 1.0, "star_velocity": 76.51305334846765, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (67,408 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 15, "category": "educational", "name": "patchy631/ai-engineering-hub", "url": "https://github.com/patchy631/ai-engineering-hub", "description": "In-depth tutorials on LLMs, RAGs and real-world AI agent applications.", "stars": 20856, "forks": 3459, "language": "Jupyter Notebook", "topics": ["agents", "ai", "llms", "machine-learning", "mcp"], "score": 1.0, "star_velocity": 53.61439588688946, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (20,856 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 16, "category": "educational", "name": "dair-ai/Prompt-Engineering-Guide", "url": "https://github.com/dair-ai/Prompt-Engineering-Guide", "description": "\ud83d\udc19 Guides, papers, lessons, notebooks and resources for prompt engineering, context engineering, RAG, and AI Agents.", "stars": 66406, "forks": 6923, "language": "MDX", "topics": ["agent", "agents", "ai-agents", "chatgpt", "deep-learning"], "score": 1.0, "star_velocity": 62.411654135338345, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (66,406 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 17, "category": "educational", "name": "microsoft/ML-For-Beginners", "url": "https://github.com/microsoft/ML-For-Beginners", "description": "12 weeks, 26 lessons, 52 quizzes, classic Machine Learning for all", "stars": 78893, "forks": 18264, "language": "Jupyter Notebook", "topics": ["data-science", "education", "machine-learning", "machine-learning-algorithms", "machinelearning"], "score": 0.9797408270238788, "star_velocity": 45.94816540477577, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (78,893 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 18, "category": "educational", "name": "freeCodeCamp/freeCodeCamp", "url": "https://github.com/freeCodeCamp/freeCodeCamp", "description": "freeCodeCamp.org's open-source codebase and curriculum. Learn math, programming, and computer science for free.", "stars": 432107, "forks": 42402, "language": "TypeScript", "topics": ["careers", "certification", "community", "curriculum", "d3"], "score": 0.9600000000000001, "star_velocity": 108.62418300653594, "quality_score": 0.8, "activity_score": 1.0, "why_recommended": "Highly popular (432,107 stars); Rising star; Recently updated; Has license"}, {"rank": 19, "category": "educational", "name": "infiniflow/ragflow", "url": "https://github.com/infiniflow/ragflow", "description": "RAGFlow is a leading open-source Retrieval-Augmented Generation (RAG) engine that fuses cutting-edge RAG with Agent capabilities to create a superior context layer for LLMs", "stars": 67698, "forks": 7227, "language": "TypeScript", "topics": ["agent", "agentic", "agentic-ai", "agentic-workflow", "ai"], "score": 0.9600000000000001, "star_velocity": 96.29871977240398, "quality_score": 0.8, "activity_score": 1.0, "why_recommended": "Highly popular (67,698 stars); Rising star; Recently updated; Has license"}, {"rank": 20, "category": "educational", "name": "tensorflow/tensorflow", "url": "https://github.com/tensorflow/tensorflow", "description": "An Open Source Machine Learning Framework for Everyone", "stars": 192428, "forks": 74990, "language": "C++", "topics": ["deep-learning", "deep-neural-networks", "distributed", "machine-learning", "ml"], "score": 0.9600000000000001, "star_velocity": 52.57595628415301, "quality_score": 0.8, "activity_score": 1.0, "why_recommended": "Highly popular (192,428 stars); Rising star; Recently updated; Has license"}, {"rank": 1, "category": "production_ready", "name": "EbookFoundation/free-programming-books", "url": "https://github.com/EbookFoundation/free-programming-books", "description": ":books: Freely available programming books", "stars": 376842, "forks": 65385, "language": "Python", "topics": ["books", "education", "hacktoberfest", "list", "resource"], "score": 1.0, "star_velocity": 85.31627801675346, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (376,842 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 2, "category": "production_ready", "name": "donnemartin/system-design-primer", "url": "https://github.com/donnemartin/system-design-primer", "description": "Learn how to design large-scale systems. Prep for the system design interview.  Includes Anki flashcards.", "stars": 326471, "forks": 53163, "language": "Python", "topics": ["design", "design-patterns", "design-system", "development", "interview"], "score": 1.0, "star_velocity": 102.56707508639649, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (326,471 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 3, "category": "production_ready", "name": "vinta/awesome-python", "url": "https://github.com/vinta/awesome-python", "description": "An opinionated list of awesome Python frameworks, libraries, software and resources.", "stars": 269349, "forks": 26695, "language": "Python", "topics": ["awesome", "collections", "python", "python-framework", "python-library"], "score": 1.0, "star_velocity": 64.77849927849928, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (269,349 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 4, "category": "production_ready", "name": "TheAlgorithms/Python", "url": "https://github.com/TheAlgorithms/Python", "description": "All Algorithms implemented in Python", "stars": 213089, "forks": 49252, "language": "Python", "topics": ["algorithm", "algorithm-competitions", "algorithms-implemented", "algos", "community-driven"], "score": 1.0, "star_velocity": 62.526115023474176, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (213,089 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 5, "category": "production_ready", "name": "Significant-Gravitas/AutoGPT", "url": "https://github.com/Significant-Gravitas/AutoGPT", "description": "AutoGPT is the vision of accessible AI for everyone, to use and to build on. Our mission is to provide the tools, so that you can focus on what matters.", "stars": 179693, "forks": 46122, "language": "Python", "topics": ["ai", "artificial-intelligence", "autonomous-agents", "gpt-4", "llama-api"], "score": 1.0, "star_velocity": 184.48973305954826, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (179,693 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 6, "category": "production_ready", "name": "AUTOMATIC1111/stable-diffusion-webui", "url": "https://github.com/AUTOMATIC1111/stable-diffusion-webui", "description": "Stable Diffusion web UI", "stars": 158202, "forks": 29366, "language": "Python", "topics": ["ai", "ai-art", "deep-learning", "diffusion", "gradio"], "score": 1.0, "star_velocity": 134.06949152542373, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (158,202 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 7, "category": "production_ready", "name": "huggingface/transformers", "url": "https://github.com/huggingface/transformers", "description": "\ud83e\udd17 Transformers: the model-definition framework for state-of-the-art machine learning models in text, vision, audio, and multimodal models, for both inference and training. ", "stars": 152518, "forks": 31145, "language": "Python", "topics": ["audio", "deep-learning", "deepseek", "gemma", "glm"], "score": 1.0, "star_velocity": 59.276331130975514, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (152,518 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 8, "category": "production_ready", "name": "langflow-ai/langflow", "url": "https://github.com/langflow-ai/langflow", "description": "Langflow is a powerful tool for building and deploying AI-powered agents and workflows.", "stars": 138226, "forks": 7987, "language": "Python", "topics": ["agents", "chatgpt", "generative-ai", "large-language-models", "multiagent"], "score": 1.0, "star_velocity": 136.85742574257426, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (138,226 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 9, "category": "production_ready", "name": "yt-dlp/yt-dlp", "url": "https://github.com/yt-dlp/yt-dlp", "description": "A feature-rich command-line audio/video downloader", "stars": 135064, "forks": 10849, "language": "Python", "topics": ["cli", "downloader", "python", "sponsorblock", "youtube-dl"], "score": 1.0, "star_velocity": 73.20542005420054, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (135,064 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 10, "category": "production_ready", "name": "comfyanonymous/ComfyUI", "url": "https://github.com/comfyanonymous/ComfyUI", "description": "The most powerful and modular diffusion model GUI, api and backend with a graph/nodes interface.", "stars": 93588, "forks": 10557, "language": "Python", "topics": ["ai", "comfy", "comfyui", "python", "pytorch"], "score": 1.0, "star_velocity": 90.68604651162791, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (93,588 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 11, "category": "production_ready", "name": "microsoft/markitdown", "url": "https://github.com/microsoft/markitdown", "description": "Python tool for converting files and office documents to Markdown.", "stars": 83007, "forks": 4704, "language": "Python", "topics": ["autogen", "autogen-extension", "langchain", "markdown", "microsoft-office"], "score": 1.0, "star_velocity": 226.79508196721312, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (83,007 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 12, "category": "production_ready", "name": "Shubhamsaboo/awesome-llm-apps", "url": "https://github.com/Shubhamsaboo/awesome-llm-apps", "description": "Collection of awesome LLM apps with AI Agents and RAG using OpenAI, Anthropic, Gemini and opensource models.", "stars": 77661, "forks": 10307, "language": "Python", "topics": ["llms", "python", "rag"], "score": 1.0, "star_velocity": 137.6968085106383, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (77,661 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 13, "category": "production_ready", "name": "hacksider/Deep-Live-Cam", "url": "https://github.com/hacksider/Deep-Live-Cam", "description": "real time face swap and one-click video deepfake with only a single image", "stars": 75747, "forks": 11019, "language": "Python", "topics": ["ai", "ai-deep-fake", "ai-face", "ai-webcam", "artificial-intelligence"], "score": 1.0, "star_velocity": 96.86317135549872, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (75,747 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 14, "category": "production_ready", "name": "binary-husky/gpt_academic", "url": "https://github.com/binary-husky/gpt_academic", "description": "\u4e3aGPT/GLM\u7b49LLM\u5927\u8bed\u8a00\u6a21\u578b\u63d0\u4f9b\u5b9e\u7528\u5316\u4ea4\u4e92\u63a5\u53e3\uff0c\u7279\u522b\u4f18\u5316\u8bba\u6587\u9605\u8bfb/\u6da6\u8272/\u5199\u4f5c\u4f53\u9a8c\uff0c\u6a21\u5757\u5316\u8bbe\u8ba1\uff0c\u652f\u6301\u81ea\u5b9a\u4e49\u5feb\u6377\u6309\u94ae&\u51fd\u6570\u63d2\u4ef6\uff0c\u652f\u6301Python\u548cC++\u7b49\u9879\u76ee\u5256\u6790&\u81ea\u8bd1\u89e3\u529f\u80fd\uff0cPDF/LaTex\u8bba\u6587\u7ffb\u8bd1&\u603b\u7ed3\u529f\u80fd\uff0c\u652f\u6301\u5e76\u884c\u95ee\u8be2\u591a\u79cdLLM\u6a21\u578b\uff0c\u652f\u6301chatglm3\u7b49\u672c\u5730\u6a21\u578b\u3002\u63a5\u5165\u901a\u4e49\u5343\u95ee, deepseekcoder, \u8baf\u98de\u661f\u706b, \u6587\u5fc3\u4e00\u8a00, llama2, rwkv, claude2, moss\u7b49\u3002", "stars": 69659, "forks": 8396, "language": "Python", "topics": ["academic", "chatglm-6b", "chatgpt", "gpt-4", "large-language-models"], "score": 1.0, "star_velocity": 71.81340206185567, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (69,659 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 15, "category": "production_ready", "name": "xtekky/gpt4free", "url": "https://github.com/xtekky/gpt4free", "description": "The official gpt4free repository | various collection of powerful language models | o4, o3 and deepseek r1, gpt-4.1, gemini 2.5", "stars": 65539, "forks": 13709, "language": "Python", "topics": ["chatbot", "chatbots", "chatgpt", "chatgpt-4", "chatgpt-api"], "score": 1.0, "star_velocity": 68.1987513007284, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (65,539 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 16, "category": "production_ready", "name": "OpenHands/OpenHands", "url": "https://github.com/OpenHands/OpenHands", "description": "\ud83d\ude4c OpenHands: Code Less, Make More", "stars": 64983, "forks": 7907, "language": "Python", "topics": ["agent", "artificial-intelligence", "chatgpt", "claude-ai", "cli"], "score": 1.0, "star_velocity": 106.35515548281506, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (64,983 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 17, "category": "production_ready", "name": "hiyouga/LLaMA-Factory", "url": "https://github.com/hiyouga/LLaMA-Factory", "description": "Unified Efficient Fine-Tuning of 100+ LLMs & VLMs (ACL 2024)", "stars": 62501, "forks": 7564, "language": "Python", "topics": ["agent", "ai", "deepseek", "fine-tuning", "gemma"], "score": 1.0, "star_velocity": 69.3684794672586, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (62,501 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 18, "category": "production_ready", "name": "FoundationAgents/MetaGPT", "url": "https://github.com/FoundationAgents/MetaGPT", "description": "\ud83c\udf1f The Multi-Agent Framework: First AI Software Company, Towards Natural Language Programming", "stars": 59470, "forks": 7254, "language": "Python", "topics": ["agent", "gpt", "llm", "metagpt", "multi-agent"], "score": 1.0, "star_velocity": 68.51382488479263, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (59,470 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 19, "category": "production_ready", "name": "RVC-Boss/GPT-SoVITS", "url": "https://github.com/RVC-Boss/GPT-SoVITS", "description": "1 min voice data can also be used to train a good TTS model! (few shot voice cloning)", "stars": 52263, "forks": 5716, "language": "Python", "topics": ["text-to-speech", "tts", "vits", "voice-clone", "voice-cloneai"], "score": 1.0, "star_velocity": 78.0044776119403, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (52,263 stars); Rising star; Recently updated; High quality; Has license"}, {"rank": 20, "category": "production_ready", "name": "microsoft/autogen", "url": "https://github.com/microsoft/autogen", "description": "A programming framework for agentic AI", "stars": 51681, "forks": 7853, "language": "Python", "topics": ["agentic", "agentic-agi", "agents", "ai", "autogen"], "score": 1.0, "star_velocity": 63.1025641025641, "quality_score": 1.0, "activity_score": 1.0, "why_recommended": "Highly popular (51,681 stars); Rising star; Recently updated; High quality; Has license"}];
+        let filteredRepos = [...repos];
+        let sortColumn = 'rank';
+        let sortDirection = 'asc';
+        
+        function filterRepos() {
+            const search = document.getElementById('search').value.toLowerCase();
+            const category = document.getElementById('category').value;
+            const language = document.getElementById('language').value;
+            const minStars = parseInt(document.getElementById('minStars').value) || 0;
+            const minScore = parseFloat(document.getElementById('minScore').value) || 0;
+            
+            filteredRepos = repos.filter(repo => {
+                const matchesSearch = !search || 
+                    repo.name.toLowerCase().includes(search) ||
+                    (repo.description || '').toLowerCase().includes(search) ||
+                    (repo.topics || []).some(t => t.toLowerCase().includes(search));
+                
+                const matchesCategory = !category || repo.category === category;
+                const matchesLanguage = !language || repo.language === language;
+                const matchesStars = repo.stars >= minStars;
+                const matchesScore = repo.score >= minScore;
+                
+                return matchesSearch && matchesCategory && matchesLanguage && matchesStars && matchesScore;
+            });
+            
+            sortRepos();
+            renderTable();
+            updateStats();
+        }
+        
+        function sortRepos() {
+            filteredRepos.sort((a, b) => {
+                let aVal = a[sortColumn];
+                let bVal = b[sortColumn];
+                
+                if (typeof aVal === 'string') {
+                    aVal = aVal.toLowerCase();
+                    bVal = bVal.toLowerCase();
+                }
+                
+                if (sortDirection === 'asc') {
+                    return aVal > bVal ? 1 : aVal < bVal ? -1 : 0;
+                } else {
+                    return aVal < bVal ? 1 : aVal > bVal ? -1 : 0;
+                }
+            });
+        }
+        
+        function renderTable() {
+            const tbody = document.getElementById('repoTableBody');
+            const noResults = document.getElementById('noResults');
+            
+            if (filteredRepos.length === 0) {
+                tbody.innerHTML = '';
+                noResults.style.display = 'block';
+                return;
+            }
+            
+            noResults.style.display = 'none';
+            
+            tbody.innerHTML = filteredRepos.map(repo => {
+                const url = repo.url || '';
+                const name = repo.name || 'Unknown';
+                const description = repo.description || 'No description';
+                const category = (repo.category || '').replace(/_/g, ' ');
+                const language = repo.language;
+                const stars = repo.stars || 0;
+                const forks = repo.forks || 0;
+                const score = repo.score || 0;
+                const topics = repo.topics || [];
+                const why = repo.why_recommended || 'Quality repository';
+                const langBadge = language ? '<span class="badge badge-language">' + language + '</span>' : 'N/A';
+                const topicBadges = topics.slice(0, 3).map(t => '<span class="badge badge-topic">' + t + '</span>').join('');
+                
+                return '<tr>' +
+                    '<td>' + repo.rank + '</td>' +
+                    '<td>' +
+                        '<div class="repo-name">' + name + '</div>' +
+                        '<a href="' + url + '" target="_blank" class="repo-link" rel="noopener noreferrer">' + url + '</a>' +
+                        '<div class="repo-description">' + description + '</div>' +
+                    '</td>' +
+                    '<td><span class="badge badge-category">' + category + '</span></td>' +
+                    '<td>' + langBadge + '</td>' +
+                    '<td><span class="stars">⭐ ' + stars.toLocaleString() + '</span></td>' +
+                    '<td><span class="forks">🍴 ' + forks.toLocaleString() + '</span></td>' +
+                    '<td>' +
+                        score.toFixed(3) +
+                        '<div class="score-bar">' +
+                            '<div class="score-fill" style="width: ' + (score * 100) + '%"></div>' +
+                        '</div>' +
+                    '</td>' +
+                    '<td>' + topicBadges + '</td>' +
+                    '<td style="font-size: 0.85em; color: #6c757d;">' + why + '</td>' +
+                '</tr>';
+            }).join('');
+        }
+        
+        function updateStats() {
+            document.getElementById('showingCount').textContent = filteredRepos.length;
+        }
+        
+        function setupSorting() {
+            document.querySelectorAll('th.sortable').forEach(th => {
+                th.addEventListener('click', () => {
+                    const column = th.dataset.sort;
+                    
+                    if (sortColumn === column) {
+                        sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        sortColumn = column;
+                        sortDirection = 'asc';
+                    }
+                    
+                    document.querySelectorAll('th').forEach(h => {
+                        h.classList.remove('sort-asc', 'sort-desc');
+                    });
+                    th.classList.add(`sort-${sortDirection}`);
+                    
+                    sortRepos();
+                    renderTable();
+                });
+            });
+        }
+        
+        // Event listeners
+        document.getElementById('search').addEventListener('input', filterRepos);
+        document.getElementById('category').addEventListener('change', filterRepos);
+        document.getElementById('language').addEventListener('change', filterRepos);
+        document.getElementById('minStars').addEventListener('input', filterRepos);
+        document.getElementById('minScore').addEventListener('input', filterRepos);
+        
+        // Initialize
+        setupSorting();
+        renderTable();
+    </script>
+</body>
+</html>
